@@ -4,10 +4,10 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Replace with your Bot Token from BotFather (store in environment variable)
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv(8501592088:AAEdyVB18kZLgzAfklsdDk0lvxj-uxHcmaQ)
 
 # Target Channel or Group ID (store in environment variable)
-TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
+TARGET_CHAT_ID = int(os.getenv(-1002912706519)
 
 # Enable logging to monitor bot activity in the terminal
 logging.basicConfig(
