@@ -1,12 +1,13 @@
+import os
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Replace with your actual Bot Token from BotFather
-BOT_TOKEN = 8501592088:AAEdyVB18kZLgzAfklsdDk0lvxj-uxHcmaQ
+# Replace with your NEW Bot Token from BotFather inside quotes
+BOT_TOKEN = os.getenv(8501592088:AAEdyVB18kZLgzAfklsdDk0lvxj-uxHcmaQ)
 
-# Target Channel or Group (Use @channel_username or numerical ID like -100xxxxxxxxxx)
-TARGET_CHAT_ID = -1002912706519
+# Target Channel or Group ID (Keep the quotes around numerical IDs)
+TARGET_CHAT_ID = os.getenv(-1002912706519)
 
 # Enable logging to monitor bot activity in the terminal
 logging.basicConfig(
@@ -16,29 +17,50 @@ logging.basicConfig(
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a greeting when the command /start is issued."""
-    await update.message.reply_text("Send me a video, and I will post it to the channel!")
+    await update.message.reply_text("Send me a video, photo, text message, or link, and I will post it to the channel!")
 
-async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handles incoming videos and posts them to the target group or channel."""
-    video = update.message.video
-    caption = update.message.caption or ""  # Retain original caption if present
+async def handle_media_and_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handles incoming videos, photos, links/text, and files, then posts them to the target group or channel."""
+    msg = update.message
+    caption = msg.caption or ""
 
     try:
-        # Option A: Send as a new post using the video file ID (Faster & saves bandwidth)
-        await context.bot.send_video(
-            chat_id=TARGET_CHAT_ID,
-            video=video.file_id,
-            caption=caption
-        )
-        
-        # Option B: Uncomment below if you prefer forwarding instead of posting fresh
-        # await update.message.forward(chat_id=TARGET_CHAT_ID)
+        # Handle Video
+        if msg.video:
+            await context.bot.send_video(
+                chat_id=TARGET_CHAT_ID,
+                video=msg.video.file_id,
+                caption=caption
+            )
 
-        await update.message.reply_text("✅ Video successfully posted!")
-        
+        # Handle Photo (pick the highest resolution available)
+        elif msg.photo:
+            await context.bot.send_photo(
+                chat_id=TARGET_CHAT_ID,
+                photo=msg.photo[-1].file_id,
+                caption=caption
+            )
+
+        # Handle Document/File (e.g., uncompressed videos/images)
+        elif msg.document:
+            await context.bot.send_document(
+                chat_id=TARGET_CHAT_ID,
+                document=msg.document.file_id,
+                caption=caption
+            )
+
+        # Handle Plain Text & Links
+        elif msg.text:
+            await context.bot.send_message(
+                chat_id=TARGET_CHAT_ID,
+                text=msg.text
+            )
+
+        await msg.reply_text("✅ Message successfully posted to channel!")
+
     except Exception as e:
-        logging.error(f"Failed to send video: {e}")
-        await update.message.reply_text(f"❌ Failed to post video. Error: {e}")
+        logging.error(f"Failed to post message: {e}")
+        await msg.reply_text(f"❌ Failed to post message. Error: {e}")
 
 def main() -> None:
     """Start the bot."""
@@ -46,10 +68,14 @@ def main() -> None:
 
     # Handlers
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.VIDEO, handle_video))
+    
+    # Filter for videos, photos, documents, and text/links
+    media_filter = filters.VIDEO | filters.PHOTO | filters.Document.ALL | filters.TEXT
+    app.add_handler(MessageHandler(media_filter & ~filters.COMMAND, handle_media_and_text))
 
     print("Bot running...")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
+        
