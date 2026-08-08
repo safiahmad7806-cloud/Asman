@@ -4,8 +4,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Read from environment variables (set these in your shell/host, not in code)
-BOT_TOKEN = 8501592088:AAEdyVB18kZLgzAfklsdDk0lvxj-uxHcmaQ
-TARGET_CHAT_ID = -1002912706519
+BOT_TOKEN = os.getenv(8501592088:AAHODptUi4BMNIf59nVfmA8aw9lilwN0-IM)
+TARGET_CHAT_ID = int(os.getenv(-1002912706519))
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
