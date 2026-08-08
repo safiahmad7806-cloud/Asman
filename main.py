@@ -14,13 +14,18 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
+logger = logging.getLogger(__name__)
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.info(f"/start received from user_id={update.effective_user.id} chat_id={update.effective_chat.id}")
     await update.message.reply_text("Bot active hai.")
+
 
 async def post_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/post <message ya link> — sirf admin use kar sakta hai, target group mein bhejta hai."""
     user_id = update.effective_user.id
+    logger.info(f"/post received from user_id={user_id}")
 
     if user_id != ADMIN_USER_ID:
         await update.message.reply_text("❌ Aapko ye command use karne ki permission nahi hai.")
@@ -39,10 +44,13 @@ async def post_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         logging.error(f"Failed to send: {e}")
         await update.message.reply_text(f"❌ Error: {e}")
 
+
 async def handle_media_and_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     msg = update.message
+    logger.info(f"Message received: chat_id={msg.chat_id} from_user={msg.from_user.id if msg.from_user else None}")
 
     if msg.chat_id not in SOURCE_CHAT_IDS:
+        logger.info(f"Ignored: chat_id={msg.chat_id} not in SOURCE_CHAT_IDS={SOURCE_CHAT_IDS}")
         return
 
     caption = msg.caption or ""
@@ -56,8 +64,10 @@ async def handle_media_and_text(update: Update, context: ContextTypes.DEFAULT_TY
             await context.bot.send_document(chat_id=TARGET_CHAT_ID, document=msg.document.file_id, caption=caption)
         elif msg.text:
             await context.bot.send_message(chat_id=TARGET_CHAT_ID, text=msg.text)
+        logger.info(f"Forwarded message from chat_id={msg.chat_id} to TARGET_CHAT_ID={TARGET_CHAT_ID}")
     except Exception as e:
         logging.error(f"Failed to forward message from {msg.chat_id}: {e}")
+
 
 def main() -> None:
     if not BOT_TOKEN:
@@ -75,5 +85,7 @@ def main() -> None:
     print("Bot running...")
     app.run_polling()
 
+
 if __name__ == "__main__":
     main()
+        
