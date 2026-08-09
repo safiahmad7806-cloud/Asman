@@ -7,9 +7,6 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
 ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID"))  # sirf aapki Telegram user ID
 
-SOURCE_CHAT_IDS_RAW = os.getenv("SOURCE_CHAT_IDS", "")
-SOURCE_CHAT_IDS = set(int(x.strip()) for x in SOURCE_CHAT_IDS_RAW.split(",") if x.strip())
-
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -49,19 +46,13 @@ async def handle_media_and_text(update: Update, context: ContextTypes.DEFAULT_TY
     msg = update.message
     logger.info(f"Message received: chat_id={msg.chat_id} from_user={msg.from_user.id if msg.from_user else None}")
 
-    if msg.chat_id not in SOURCE_CHAT_IDS:
-        logger.info(f"Ignored: chat_id={msg.chat_id} not in SOURCE_CHAT_IDS={SOURCE_CHAT_IDS}")
-        return
-
-    caption = msg.caption or ""
-
     try:
         if msg.video:
-            await context.bot.send_video(chat_id=TARGET_CHAT_ID, video=msg.video.file_id, caption=caption)
+            await context.bot.send_video(chat_id=TARGET_CHAT_ID, video=msg.video.file_id, caption=msg.caption or "")
         elif msg.photo:
-            await context.bot.send_photo(chat_id=TARGET_CHAT_ID, photo=msg.photo[-1].file_id, caption=caption)
+            await context.bot.send_photo(chat_id=TARGET_CHAT_ID, photo=msg.photo[-1].file_id, caption=msg.caption or "")
         elif msg.document:
-            await context.bot.send_document(chat_id=TARGET_CHAT_ID, document=msg.document.file_id, caption=caption)
+            await context.bot.send_document(chat_id=TARGET_CHAT_ID, document=msg.document.file_id, caption=msg.caption or "")
         elif msg.text:
             await context.bot.send_message(chat_id=TARGET_CHAT_ID, text=msg.text)
         logger.info(f"Forwarded message from chat_id={msg.chat_id} to TARGET_CHAT_ID={TARGET_CHAT_ID}")
@@ -88,4 +79,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-        
+    
